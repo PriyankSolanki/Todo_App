@@ -10,9 +10,10 @@ type CardProps = {
     onDelete?: (id: string) => void;
     columnId: string;
     isOverlay?: boolean;
+    onOpen: (card: CardModel, columnId: string) => void;
 };
 
-export default function Card({ card, onDelete, columnId, isOverlay }: CardProps) {
+export default function Card({ card, onDelete, columnId, isOverlay, onOpen }: CardProps) {
     const { setNodeRef, attributes, listeners, transform, transition, isDragging } =
         useSortable({
             id: card.id,
@@ -27,21 +28,26 @@ export default function Card({ card, onDelete, columnId, isOverlay }: CardProps)
     };
 
     return (
-        <div className={`${styles.card} ${isOverlay ? styles.cardOverlay : ""}`} ref={setNodeRef}  style={style} {...attributes} {...listeners}>
-            <span className={styles.title}>{card.title}</span>
+        <div className={`${styles.card} ${isOverlay ? styles.cardOverlay : ""}`} ref={setNodeRef}  style={style} {...attributes} {...listeners} onClick={() => onOpen(card, columnId)}>
+            <div className={styles.cardHeader}>
+                <span className={styles.title}>{card.title}</span>
 
-            {onDelete && (
-                <button
-                    className={styles.deleteBtn}
-                    onClick={() => onDelete(card.id)}
-                    title="Supprimer la carte"
-                    type="button"
-                >
-                    <FontAwesomeIcon icon={faTrash} />
-                </button>
-            )}
+                {onDelete && (
+                    <button
+                        className={styles.deleteBtn}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete?.(card.id);
+                        }}
+                        title="Supprimer la carte"
+                        type="button"
+                    >
+                        <FontAwesomeIcon icon={faTrash} />
+                    </button>
+                )}
+            </div>
 
-            <p>{card.description}</p>
+            <p className={styles.description}>{card.description}</p>
         </div>
     );
 }

@@ -8,6 +8,7 @@ import { DndContext, DragEndEvent, DragOverEvent, PointerSensor, closestCorners,
 import { arrayMove } from "@dnd-kit/sortable";
 import {CardModel} from "../../models/card";
 import Card from "../card/card";
+import CardModal from "../cardModal/cardModal";
 
 export default function Board() {
 
@@ -18,7 +19,25 @@ export default function Board() {
 
     const [activeCard, setActiveCard] = useState<CardModel | null>(null);
 
+    const [selectedCard, setSelectedCard] = useState<{
+        card: CardModel;
+        columnId: string;
+    } | null>(null);
 
+    const updateCard = (columnId: string, cardId: string, title: string, description: string) => {
+        setColumns((prev) =>
+            prev.map((col) =>
+                col.id === columnId
+                    ? {
+                        ...col,
+                        cards: col.cards.map((c) =>
+                            c.id === cardId ? { ...c, title, description } : c
+                        ),
+                    }
+                    : col
+            )
+        );
+    };
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -140,6 +159,16 @@ export default function Board() {
         setColumns((prev) => prev.filter((c) => c.id !== id));
     };
 
+    const openCard = (card: CardModel, columnId: string) => {
+        setSelectedCard({ card, columnId });
+    };
+
+    const renameColumn = (columnId: string, title: string) => {
+        setColumns((prev) =>
+            prev.map((col) => (col.id === columnId ? { ...col, title } : col))
+        );
+    };
+
     return (
         <DndContext
             sensors={sensors}
@@ -156,7 +185,7 @@ export default function Board() {
 
             <main className={styles.columns}>
                 {columns.map((col) => (
-                    <Column key={col.id} column={col} onDelete={deleteColumn} onAddCard={addCard} onDeleteCard={deleteCard} />
+                    <Column key={col.id} column={col} onDelete={deleteColumn} onAddCard={addCard} onDeleteCard={deleteCard} onOpenCard={openCard} onRename={renameColumn}/>
                 ))}
                 <form onSubmit={addColumn} className={styles.addColumnForm}>
 
@@ -169,8 +198,18 @@ export default function Board() {
             </div>
         </div>
             <DragOverlay>
-                {activeCard ? <Card card={activeCard} isOverlay columnId={""} /> : null}
+                {activeCard ? <Card card={activeCard} isOverlay columnId={""} onOpen={openCard}/> : null}
             </DragOverlay>
+
+            {selectedCard && (
+                <CardModal
+                    card={selectedCard.card}
+                    onClose={() => setSelectedCard(null)}
+                    onSave={(cardId, title, description) =>
+                        updateCard(selectedCard.columnId, cardId, title, description)
+                    }
+                />
+            )}
         </DndContext>
 
     );

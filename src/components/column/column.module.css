@@ -13,14 +13,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 9px;
     margin-bottom: 10px;
-}
-
-.title {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 700;
 }
 
 .iconBtn {
@@ -55,13 +49,13 @@
 }
 
 .input {
-    width: 90%;
+    width: 100%;
     padding: 10px 12px;
     margin-top: 11px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border: 1px dashed rgba(255, 255, 255, 0.14);
     background: rgba(255, 255, 255, 0.06);
-
+    text-align: center;
     color: white;
     font-size: 13px;
 
@@ -79,8 +73,27 @@
 }
 
 .input:focus {
-    border-color: rgba(59, 130, 246, 0.55);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.18);
     background: rgba(255, 255, 255, 0.09);
 }
 
+
+.columnTitleInput {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: white;
+    padding: 6px 6px;
+    border-radius: 9px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    max-width: 260px;
+}
+
+.columnTitleInput:focus {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    width: 100%;      /* ✅ suit la taille du wrapper */
+}
