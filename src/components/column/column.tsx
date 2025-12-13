@@ -60,6 +60,12 @@ export default function Column({ column, onDelete, onAddCard, onDeleteCard, onOp
                         placeholder="Nom de la colonne"
                         maxLength={maxLen}
                         style={{ fontSize }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                (e.currentTarget as HTMLInputElement).blur();
+                            }
+                        }}
                     />
 
                     {onDelete && (
@@ -75,11 +81,7 @@ export default function Column({ column, onDelete, onAddCard, onDeleteCard, onOp
                 </header>
 
                 <div className={styles.cards}>
-                    {column.cards.length === 0 ? (
-                        <div className={styles.body}>
-                            <p className={styles.empty}>Aucune carte pour le moment</p>
-                        </div>
-                    ) : (
+                    {(
                         column.cards.map((card) => <Card key={card.id} card={card} onDelete={(cardId) => onDeleteCard(column.id, cardId)} columnId={column.id} onOpen={onOpenCard}/>)
                     )}
                 </div>

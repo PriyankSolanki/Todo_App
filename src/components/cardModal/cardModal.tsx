@@ -54,10 +54,16 @@ export default function CardModal({ card, onClose, onSave }: Props) {
                     className={styles.textarea}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Description"
+                    placeholder="Écrivez vos notes !"
                     rows={1}
                 />
 
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        submit();
+                    }}
+                >
                 <div className={styles.actions}>
                     <button className={styles.secondary} onClick={onClose}>
                         Annuler
@@ -66,6 +72,7 @@ export default function CardModal({ card, onClose, onSave }: Props) {
                         Enregistrer
                     </button>
                 </div>
+                </form>
             </div>
         </div>
     );
