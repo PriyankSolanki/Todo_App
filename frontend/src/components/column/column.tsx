@@ -5,6 +5,8 @@ import {ColumnModel} from "../../models/column";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import {CardModel} from "../../models/card";
+import {useMutation} from "@apollo/client/react";
+import {UPDATE_COLUMN} from "../../queries/updateColumnName";
 
 
 type ColumnProps = {
@@ -41,6 +43,20 @@ export default function Column({ column, onDelete, onAddCard, onDeleteCard, onOp
         id: column.id,
         data: { type: "column", columnId: column.id },
     });
+
+    const [updateColumnName] = useMutation(UPDATE_COLUMN);
+
+    const handleRename = async (columnId: string, title: string) => {
+        onRename(columnId, title);
+        await updateColumnName({
+            variables: {
+                id: Number(columnId),
+                name: title,
+            },
+        });
+    };
+
+
     return (
         <section
             ref={setNodeRef}
@@ -65,6 +81,12 @@ export default function Column({ column, onDelete, onAddCard, onDeleteCard, onOp
                                 e.preventDefault();
                                 (e.currentTarget as HTMLInputElement).blur();
                             }
+                        }}
+                        onBlur={async () => {
+                            if (!column.id) return;
+                            const trimmed = column.title.trim();
+                            if (!trimmed) return;
+                            await handleRename(column.bdId, trimmed);
                         }}
                     />
 

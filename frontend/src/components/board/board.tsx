@@ -26,7 +26,7 @@ export default function Board() {
     const [columns, setColumns] = useState<ColumnModel[]>([]);
 
     //donnée de test
-    const { data, loading, error } = useQuery<GetBoardsData, GetBoardsVars>(GET_BOARDS, {
+    const { data} = useQuery<GetBoardsData, GetBoardsVars>(GET_BOARDS, {
         variables: { userId },
     });
 
@@ -42,19 +42,20 @@ export default function Board() {
         setBoardId(board.id);
 
         const nextColumns: ColumnModel[] = [...board.columns]
-            .sort((a: any, b: any) => a.position - b.position)
+            .sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || a.id - b.id)
             .map((col: any) => ({
-                id: String(col.id),
+                id: `col_${col.id}`,
+                bdId : String(col.id),
                 title: col.name,
                 cards: [...col.cards]
-                    .sort((a: any, b: any) => a.position - b.position)
+                    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0) || a.id - b.id)
                     .map((card: any) => ({
-                        id: String(card.id),
+                        id: `card_${card.id}`,
+                        bdId : String(card.id),
                         title: card.name,
                         description: card.description ?? "",
                     })),
             }));
-
         setColumns(nextColumns);
     }, [data]);
 
@@ -171,7 +172,7 @@ export default function Board() {
                     ...col,
                     cards: [
                         ...col.cards,
-                        { id: Date.now().toString(), title, description: "" },
+                        { id: Date.now().toString(),bdId: "" ,title, description: "" },
                     ],
                 } : col
             )
@@ -193,7 +194,7 @@ export default function Board() {
 
     const addColumn = (e: FormEvent) => {
         e.preventDefault();
-        setColumns((prev) => [...prev, { id: `col_${Date.now()}`, title: "Nouvelle colonne", cards: [] }]);
+        setColumns((prev) => [...prev, { id: `col_${Date.now()}`, bdId:"",title: "Nouvelle colonne", cards: [] }]);
     };
 
     const deleteColumn = (id: string) => {
@@ -209,9 +210,6 @@ export default function Board() {
             prev.map((col) => (col.id === columnId ? { ...col, title } : col))
         );
     };
-
-    if (loading) return <div>Chargement…</div>;
-    if (error) return <div>Erreur: {error.message}</div>;
 
     return (
         <DndContext
