@@ -64,7 +64,7 @@
 
 .cardOverlay {
     box-shadow: 0 20px 40px rgba(0,0,0,0.25);
-    transform: scale(1.03);
+    transform: scale(1.03) rotateZ(5deg);
     color: rgba(255, 255, 255, 0.71);
     pointer-events: none;
 }

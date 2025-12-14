@@ -1,21 +1,62 @@
-import {FormEvent, useState} from "react";
+import {FormEvent, useEffect, useState} from "react";
 import styles from "./board.module.css";
 import { ColumnModel } from "../../models/column";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import Column from "../column/column";
 import { DndContext, DragEndEvent, DragOverEvent, PointerSensor, closestCorners, useSensor, useSensors, DragOverlay} from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
+import {arrayMove} from "@dnd-kit/sortable";
 import {CardModel} from "../../models/card";
 import Card from "../card/card";
 import CardModal from "../cardModal/cardModal";
+import { GET_BOARDS } from "../../queries/getBoard";
+import {useMutation, useQuery} from "@apollo/client/react";
+import {UPDATE_BOARD} from "../../queries/updateBoardName";
 
 export default function Board() {
 
+    type GqlCard = { id: number; name: string; description?: string | null; position: number };
+    type GqlColumn = { id: number; name: string; position: number; cards: GqlCard[] };
+    type GqlBoard = { id: number; name: string; columns: GqlColumn[] };
+
+    type GetBoardsData = { boardsByUser: GqlBoard[] };
+    type GetBoardsVars = { userId: number };
+
+    const userId = 1;
+    const [columns, setColumns] = useState<ColumnModel[]>([]);
+
     //donnée de test
-    const [columns, setColumns] = useState<ColumnModel[]>([
-        { id: "todo", title: "Todo", cards: [{ id: "c1", title: "Première tâche", description : "test" }]},
-    ]);
+    const { data, loading, error } = useQuery<GetBoardsData, GetBoardsVars>(GET_BOARDS, {
+        variables: { userId },
+    });
+
+    const [boardName, setBoardName] = useState("Mon board");
+    const [boardId, setBoardId] = useState<number | null>(null);
+    const [updateBoard] = useMutation(UPDATE_BOARD);
+
+    useEffect(() => {
+        if (!data?.boardsByUser?.length) return;
+
+        const board = data.boardsByUser[0];
+        setBoardName(board.name);
+        setBoardId(board.id);
+
+        const nextColumns: ColumnModel[] = [...board.columns]
+            .sort((a: any, b: any) => a.position - b.position)
+            .map((col: any) => ({
+                id: String(col.id),
+                title: col.name,
+                cards: [...col.cards]
+                    .sort((a: any, b: any) => a.position - b.position)
+                    .map((card: any) => ({
+                        id: String(card.id),
+                        title: card.name,
+                        description: card.description ?? "",
+                    })),
+            }));
+
+        setColumns(nextColumns);
+    }, [data]);
 
     const [activeCard, setActiveCard] = useState<CardModel | null>(null);
 
@@ -169,6 +210,9 @@ export default function Board() {
         );
     };
 
+    if (loading) return <div>Chargement…</div>;
+    if (error) return <div>Erreur: {error.message}</div>;
+
     return (
         <DndContext
             sensors={sensors}
@@ -180,7 +224,23 @@ export default function Board() {
         <div className={styles.page}>
             <div className={styles.board}>
             <header className={styles.header}>
-                <h1 className={styles.h1}>Board</h1>
+                <input
+                    className={styles.boardTitleInput}
+                    value={boardName}
+                    onChange={(e) => setBoardName(e.target.value)}
+                    maxLength={32}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+                    }}
+                    onBlur={async () => {
+                        if (!boardId) return;
+                        const trimmed = boardName.trim();
+                        if (!trimmed) return;
+                        await updateBoard({
+                            variables: { input: { id: boardId, name: trimmed } },
+                        });
+                    }}
+                />
             </header>
 
             <main className={styles.columns}>
