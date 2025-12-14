@@ -56,7 +56,6 @@ export default function Column({ column, onDelete, onAddCard, onDeleteCard, onOp
         });
     };
 
-
     return (
         <section
             ref={setNodeRef}

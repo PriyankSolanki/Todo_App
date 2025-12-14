@@ -13,6 +13,7 @@ import { GET_BOARDS } from "../../queries/getBoard";
 import {useMutation, useQuery} from "@apollo/client/react";
 import {UPDATE_BOARD} from "../../queries/updateBoardName";
 import {CREATE_COLUMN} from "../../queries/createColumn";
+import {DELETE_COLUMN} from "../../queries/deleteColumn";
 
 export default function Board() {
 
@@ -237,12 +238,21 @@ export default function Board() {
                     : c
             )
         );
-        console.log(columns.map(c => ({ id: c.id, bdId: c.bdId })));
     };
 
-    const deleteColumn = (id: string) => {
-        setColumns((prev) => prev.filter((c) => c.id !== id));
+    type DeleteColumnData = { deleteColumn: boolean };
+    type DeleteColumnVars = { id: number };
+    const [deleteColumnMutation] = useMutation<DeleteColumnData, DeleteColumnVars>(DELETE_COLUMN);
+    const deleteColumn = async (columnId: string) => {
+        const col = columns.find(c => c.id === columnId);
+        if (!col?.bdId) {
+            setColumns(prev => prev.filter(c => c.id !== columnId));
+            return;
+        }
+        await deleteColumnMutation({ variables: { id: Number(col.bdId) } });
+        setColumns(prev => prev.filter(c => c.id !== columnId));
     };
+
 
     const openCard = (card: CardModel, columnId: string) => {
         setSelectedCard({ card, columnId });
@@ -257,10 +267,7 @@ export default function Board() {
             return prev.map(c => c.id === columnId ? { ...c, title } : c);
         });
 
-        if (!dbId) {
-            console.log("Skip update: column not persisted yet", columnId);
-            return;
-        }
+        if (!dbId) return;
     };
 
     return (
