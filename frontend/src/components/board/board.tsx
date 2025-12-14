@@ -12,12 +12,30 @@ import CardModal from "../cardModal/cardModal";
 import { GET_BOARDS } from "../../queries/getBoard";
 import {useMutation, useQuery} from "@apollo/client/react";
 import {UPDATE_BOARD} from "../../queries/updateBoardName";
+import {CREATE_COLUMN} from "../../queries/createColumn";
 
 export default function Board() {
 
     type GqlCard = { id: number; name: string; description?: string | null; position: number };
     type GqlColumn = { id: number; name: string; position: number; cards: GqlCard[] };
     type GqlBoard = { id: number; name: string; columns: GqlColumn[] };
+
+    type CreateColumnData = {
+        createColumn: {
+            id: number;
+            name: string;
+            position: number;
+        };
+    };
+
+    type CreateColumnVars = {
+        input: {
+            boardId: number;
+            name: string;
+            position: number;
+        };
+    };
+
 
     type GetBoardsData = { boardsByUser: GqlBoard[] };
     type GetBoardsVars = { userId: number };
@@ -192,9 +210,34 @@ export default function Board() {
         );
     };
 
-    const addColumn = (e: FormEvent) => {
+    const [createColumn] = useMutation<CreateColumnData, CreateColumnVars>(CREATE_COLUMN);
+
+    const addColumn = async (e: FormEvent) => {
         e.preventDefault();
-        setColumns((prev) => [...prev, { id: `col_${Date.now()}`, bdId:"",title: "Nouvelle colonne", cards: [] }]);
+        if (!boardId) return;
+
+        const tmpId = `col_${Date.now()}`;
+
+        setColumns((prev) => [
+            ...prev,
+            { id: tmpId, bdId: "", title: "Nouvelle colonne", cards: [] },
+        ]);
+
+        const res = await createColumn({
+            variables: { input: { boardId : 1, name: "Nouvelle colonne", position : columns.length } },
+        });
+
+        const created = res.data?.createColumn;
+        if (!created) return;
+
+        setColumns((prev) =>
+            prev.map((c) =>
+                c.id === tmpId
+                    ? { ...c, bdId: created.id.toString(), id: `col_${created.id}`, title: created.name }
+                    : c
+            )
+        );
+        console.log(columns.map(c => ({ id: c.id, bdId: c.bdId })));
     };
 
     const deleteColumn = (id: string) => {
@@ -205,10 +248,19 @@ export default function Board() {
         setSelectedCard({ card, columnId });
     };
 
-    const renameColumn = (columnId: string, title: string) => {
-        setColumns((prev) =>
-            prev.map((col) => (col.id === columnId ? { ...col, title } : col))
-        );
+    const renameColumn = async (columnId: string, title: string) => {
+        let dbId: string | null = null;
+
+        setColumns(prev => {
+            const found = prev.find(c => c.id === columnId);
+            dbId = found?.bdId ?? null;
+            return prev.map(c => c.id === columnId ? { ...c, title } : c);
+        });
+
+        if (!dbId) {
+            console.log("Skip update: column not persisted yet", columnId);
+            return;
+        }
     };
 
     return (
