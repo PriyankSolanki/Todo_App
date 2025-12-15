@@ -14,6 +14,8 @@ import {useMutation, useQuery} from "@apollo/client/react";
 import {UPDATE_BOARD} from "../../queries/updateBoardName";
 import {CREATE_COLUMN} from "../../queries/createColumn";
 import {DELETE_COLUMN} from "../../queries/deleteColumn";
+import {UPDATE_CARD} from "../../queries/updateCard";
+import {CREATE_CARD} from "../../queries/createCard";
 
 export default function Board() {
 
@@ -85,19 +87,38 @@ export default function Board() {
         columnId: string;
     } | null>(null);
 
-    const updateCard = (columnId: string, cardId: string, title: string, description: string) => {
-        setColumns((prev) =>
-            prev.map((col) =>
-                col.id === columnId
-                    ? {
-                        ...col,
-                        cards: col.cards.map((c) =>
-                            c.id === cardId ? { ...c, title, description } : c
-                        ),
-                    }
-                    : col
-            )
+    type UpdateCardData = {
+        updateCard: { id: number; name: string; description?: string | null; position: number; columnId: number };
+    };
+
+    type UpdateCardVars = {
+        input: { id: number; name?: string; description?: string; columnId?: number; position?: number };
+    };
+
+    const [updateCardMutation] = useMutation<UpdateCardData, UpdateCardVars>(UPDATE_CARD);
+
+    const updateCard = async (columnId: string, cardId: string, title: string, description: string) => {
+        let dbId: string | null = null;
+
+        setColumns(prev =>
+            prev.map(col => {
+                if (col.id !== columnId) return col;
+                return {
+                    ...col,
+                    cards: col.cards.map(c => {
+                        if (c.id !== cardId) return c;
+                        dbId = c.bdId ?? null;
+                        return { ...c, title, description };
+                    })
+                };
+            })
         );
+
+        if (!dbId) return;
+
+        await updateCardMutation({
+            variables: { input: { id: Number(dbId), name: title, description } },
+        });
     };
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -184,19 +205,65 @@ export default function Board() {
         );
     };
 
-    const addCard = (columnId: string, title: string) => {
+    type CreateCardData = {
+        createCard: { id: number; name: string; description?: string | null; position: number };
+    };
+
+    type CreateCardVars = {
+        input: { columnId: number; name: string; description?: string };
+    };
+    const [createCardMutation] = useMutation<CreateCardData, CreateCardVars>(CREATE_CARD);
+
+    const addCard = async (columnDndId: string, title: string) => {
+        const tmpCardId = `card_tmp_${Date.now()}`;
+        let columnDbId: number | null = null;
+
         setColumns((prev) =>
-            prev.map((col) =>
-                col.id === columnId ? {
+            prev.map((col) => {
+                if (col.id !== columnDndId) return col;
+
+                columnDbId = Number(col.bdId) ?? null;
+
+                return {
                     ...col,
                     cards: [
                         ...col.cards,
-                        { id: Date.now().toString(),bdId: "" ,title, description: "" },
+                        { id: tmpCardId, bdId: "", title, description: "" },
                     ],
-                } : col
-            )
+                };
+            })
+        );
+
+        if (!columnDbId) return;
+
+        const res = await createCardMutation({
+            variables: { input: { columnId: columnDbId, name: title, description: "" } },
+        });
+
+        const created = res.data?.createCard;
+        if (!created) return;
+
+        setColumns((prev) =>
+            prev.map((col) => {
+                if (col.id !== columnDndId) return col;
+                return {
+                    ...col,
+                    cards: col.cards.map((c) =>
+                        c.id === tmpCardId
+                            ? {
+                                ...c,
+                                bdId: created.id.toString(),
+                                id: `card_${created.id}`,
+                                title: created.name,
+                                description: created.description ?? "",
+                            }
+                            : c
+                    ),
+                };
+            })
         );
     };
+
 
     const deleteCard = (columnId: string, cardId: string) => {
         setColumns((prev) =>
