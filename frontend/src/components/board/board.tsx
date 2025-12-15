@@ -2,7 +2,7 @@ import {FormEvent, useEffect, useState} from "react";
 import styles from "./board.module.css";
 import { ColumnModel } from "../../models/column";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
+import {faPlus, faRightToBracket} from "@fortawesome/free-solid-svg-icons";
 import Column from "../column/column";
 import { DndContext, DragEndEvent, DragOverEvent, PointerSensor, closestCorners, useSensor, useSensors, DragOverlay} from "@dnd-kit/core";
 import {arrayMove} from "@dnd-kit/sortable";
@@ -18,6 +18,7 @@ import {UPDATE_CARD} from "../../queries/card/updateCard";
 import {CREATE_CARD} from "../../queries/card/createCard";
 import {DELETE_CARD} from "../../queries/card/deleteCard";
 import {REORDER_CARDS} from "../../queries/card/reorderCard";
+import {useNavigate} from "react-router-dom";
 
 export default function Board() {
 
@@ -45,7 +46,7 @@ export default function Board() {
     type GetBoardsData = { boardsByUser: GqlBoard[] };
     type GetBoardsVars = { userId: number };
 
-    const userId = 1;
+    const userId = Number(localStorage.getItem("userId"));
     const [columns, setColumns] = useState<ColumnModel[]>([]);
 
     //donnée de test
@@ -337,7 +338,7 @@ export default function Board() {
         ]);
 
         const res = await createColumn({
-            variables: { input: { boardId : 1, name: "Nouvelle colonne", position : columns.length } },
+            variables: { input: { boardId : boardId, name: "Nouvelle colonne", position : columns.length } },
         });
 
         const created = res.data?.createColumn;
@@ -382,6 +383,13 @@ export default function Board() {
         if (!dbId) return;
     };
 
+    const navigate = useNavigate();
+    const logout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("userId");
+        navigate("/login");
+    };
+
     return (
         <DndContext
             sensors={sensors}
@@ -410,6 +418,11 @@ export default function Board() {
                         });
                     }}
                 />
+
+                <button type="button" className={styles.logoutBtn} onClick={logout}>
+                    <span>Déconnexion</span>
+                    <FontAwesomeIcon icon={faRightToBracket} />
+                </button>
             </header>
 
             <main className={styles.columns}>
