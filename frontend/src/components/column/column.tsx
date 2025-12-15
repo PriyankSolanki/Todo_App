@@ -6,7 +6,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useDroppable } from "@dnd-kit/core";
 import {CardModel} from "../../models/card";
 import {useMutation} from "@apollo/client/react";
-import {UPDATE_COLUMN} from "../../queries/updateColumnName";
+import {UPDATE_COLUMN} from "../../queries/column/updateColumnName";
 
 
 type ColumnProps = {

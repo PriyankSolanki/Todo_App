@@ -9,13 +9,15 @@ import {arrayMove} from "@dnd-kit/sortable";
 import {CardModel} from "../../models/card";
 import Card from "../card/card";
 import CardModal from "../cardModal/cardModal";
-import { GET_BOARDS } from "../../queries/getBoard";
+import { GET_BOARDS } from "../../queries/board/getBoard";
 import {useMutation, useQuery} from "@apollo/client/react";
-import {UPDATE_BOARD} from "../../queries/updateBoardName";
-import {CREATE_COLUMN} from "../../queries/createColumn";
-import {DELETE_COLUMN} from "../../queries/deleteColumn";
-import {UPDATE_CARD} from "../../queries/updateCard";
-import {CREATE_CARD} from "../../queries/createCard";
+import {UPDATE_BOARD} from "../../queries/board/updateBoardName";
+import {CREATE_COLUMN} from "../../queries/column/createColumn";
+import {DELETE_COLUMN} from "../../queries/column/deleteColumn";
+import {UPDATE_CARD} from "../../queries/card/updateCard";
+import {CREATE_CARD} from "../../queries/card/createCard";
+import {DELETE_CARD} from "../../queries/card/deleteCard";
+import {REORDER_CARDS} from "../../queries/card/reorderCard";
 
 export default function Board() {
 
@@ -47,7 +49,7 @@ export default function Board() {
     const [columns, setColumns] = useState<ColumnModel[]>([]);
 
     //donnée de test
-    const { data} = useQuery<GetBoardsData, GetBoardsVars>(GET_BOARDS, {
+    const { data, refetch } = useQuery<GetBoardsData, GetBoardsVars>(GET_BOARDS, {
         variables: { userId },
     });
 
@@ -119,6 +121,7 @@ export default function Board() {
         await updateCardMutation({
             variables: { input: { id: Number(dbId), name: title, description } },
         });
+        await refetch();
     };
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -177,6 +180,32 @@ export default function Board() {
         });
     };
 
+    const [reorderCardsMutation] = useMutation(REORDER_CARDS);
+
+    const persistCardsOrder = async (cols: ColumnModel[]) => {
+        const items: { id: number; columnId: number; position: number }[] = [];
+
+        for (const col of cols) {
+            const colId = Number(col.bdId);
+            if (!col.bdId || Number.isNaN(colId)) continue;
+
+            for (let index = 0; index < col.cards.length; index++) {
+                const card = col.cards[index];
+                const cardId = Number(card.bdId);
+                if (!card.bdId || Number.isNaN(cardId)) continue;
+
+                items.push({
+                    id: cardId,
+                    columnId: colId,
+                    position: index,
+                });
+            }
+        }
+        if (items.length === 0) return;
+        await reorderCardsMutation({ variables: { input: { items } } });
+    };
+
+
     const handleDragEnd = ({ active, over }: DragEndEvent) => {
         if (!over) return;
 
@@ -194,15 +223,22 @@ export default function Board() {
         const activeId = String(active.id);
         const overId = String(over.id);
 
-        setColumns((prev) =>
-            prev.map((col) => {
+        setColumns((prev) => {
+            const next = prev.map((col) => {
                 if (col.id !== fromColumnId) return col;
+
                 const oldIndex = col.cards.findIndex((c) => c.id === activeId);
                 const newIndex = col.cards.findIndex((c) => c.id === overId);
+
                 if (oldIndex === -1 || newIndex === -1) return col;
+
                 return { ...col, cards: arrayMove(col.cards, oldIndex, newIndex) };
-            })
-        );
+            });
+
+            void persistCardsOrder(next);
+            return next;
+        });
+
     };
 
     type CreateCardData = {
@@ -265,18 +301,27 @@ export default function Board() {
     };
 
 
-    const deleteCard = (columnId: string, cardId: string) => {
-        setColumns((prev) =>
-            prev.map((col) =>
-                col.id === columnId
-                    ? {
-                        ...col,
-                        cards: col.cards.filter((card) => card.id !== cardId),
-                    }
-                    : col
-            )
+    type DeleteCardData = { deleteCard: boolean };
+    type DeleteCardVars = { id: number };
+    const [deleteCardMutation] = useMutation<DeleteCardData, DeleteCardVars>(DELETE_CARD);
+    const deleteCard = async (columnId: string, cardDndId: string) => {
+        let dbId: string | null = null;
+
+        setColumns(prev =>
+            prev.map(col => {
+                if (col.id !== columnId) return col;
+                const found = col.cards.find(c => c.id === cardDndId);
+                dbId = found?.bdId ?? null;
+                return { ...col, cards: col.cards.filter(c => c.id !== cardDndId) };
+            })
         );
+
+        if (!dbId) return;
+
+        await deleteCardMutation({ variables: { id: Number(dbId) } });
+        await refetch();
     };
+
 
     const [createColumn] = useMutation<CreateColumnData, CreateColumnVars>(CREATE_COLUMN);
 

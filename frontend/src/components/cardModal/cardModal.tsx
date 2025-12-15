@@ -65,10 +65,7 @@ export default function CardModal({ card, onClose, onSave }: Props) {
                     }}
                 >
                 <div className={styles.actions}>
-                    <button className={styles.secondary} onClick={onClose}>
-                        Annuler
-                    </button>
-                    <button className={styles.primary} onClick={submit}>
+                    <button className={styles.primary} type="submit">
                         Enregistrer
                     </button>
                 </div>
