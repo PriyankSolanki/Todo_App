@@ -22,7 +22,7 @@ export default function CardModal({ card, onClose, onSave }: Props) {
     const autoResize = () => {
         const el = textareaRef.current;
         if (!el) return;
-        el.style.height = "0px"; // reset
+        el.style.height = "0px";
         el.style.height = `${el.scrollHeight}px`;
     };
 

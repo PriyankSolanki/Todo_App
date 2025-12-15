@@ -25,10 +25,10 @@ export default function Column({ column, onDelete, onAddCard, onDeleteCard, onOp
         onAddCard(column.id, newCardTitle);
         setNewCardTitle("");
     };
-    const max = 16;        // font-size max
-    const min = 14;        // font-size min
-    const maxLen = 30;     // maxLength
-    const startShrink = 24; // à partir de combien on commence à réduire
+    const max = 16;
+    const min = 14;
+    const maxLen = 30;
+    const startShrink = 24;
 
     const len = column.title.length;
 

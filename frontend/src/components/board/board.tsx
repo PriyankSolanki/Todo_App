@@ -49,14 +49,17 @@ export default function Board() {
     const userId = Number(localStorage.getItem("userId"));
     const [columns, setColumns] = useState<ColumnModel[]>([]);
 
-    //donnée de test
     const { data, refetch } = useQuery<GetBoardsData, GetBoardsVars>(GET_BOARDS, {
         variables: { userId },
     });
 
     const [boardName, setBoardName] = useState("Mon board");
     const [boardId, setBoardId] = useState<number | null>(null);
-    const [updateBoard] = useMutation(UPDATE_BOARD);
+
+    const [updateBoard] = useMutation(UPDATE_BOARD, {
+        refetchQueries: ["GetBoardsByUser"],
+        awaitRefetchQueries: true,
+    });
 
     useEffect(() => {
         if (!data?.boardsByUser?.length) return;
@@ -416,6 +419,7 @@ export default function Board() {
                         await updateBoard({
                             variables: { input: { id: boardId, name: trimmed } },
                         });
+                        await refetch();
                     }}
                 />
 

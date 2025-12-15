@@ -43,7 +43,6 @@ export default function Signup() {
         <div className={styles.page}>
             <div className={styles.card}>
                 <h1 className={styles.title}>Inscription</h1>
-                <p className={styles.subtitle}>Crée ton compte pour commencer ton board.</p>
 
                 <form className={styles.form} onSubmit={onSubmit}>
                     <div className={styles.field}>

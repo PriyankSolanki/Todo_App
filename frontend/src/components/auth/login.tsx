@@ -51,7 +51,6 @@ export default function Login() {
         <div className={styles.page}>
             <div className={styles.card}>
                 <h1 className={styles.title}>Connexion</h1>
-                <p className={styles.subtitle}>Connecte-toi pour accéder à ton board.</p>
 
                 <form className={styles.form} onSubmit={onSubmit}>
                     <div className={styles.field}>
