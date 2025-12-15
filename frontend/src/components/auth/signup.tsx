@@ -1,6 +1,6 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useMutation } from "@apollo/client/react";
-import { Link, useNavigate } from "react-router-dom";
+import {Link, Navigate, useNavigate} from "react-router-dom";
 import styles from "./signup.module.css";
 import { SIGNUP } from "../../queries/auth/auth";
 
@@ -34,6 +34,10 @@ export default function Signup() {
             variables: { input: { login: login.trim(), password } },
         });
     };
+
+    if (localStorage.getItem("token")) {
+        return <Navigate to="/board" replace />;
+    }
 
     return (
         <div className={styles.page}>

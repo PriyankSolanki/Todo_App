@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useMutation } from "@apollo/client/react";
-import { useNavigate, Link } from "react-router-dom";
+import {useNavigate, Link, Navigate} from "react-router-dom";
 import { LOGIN } from "../../queries/auth/auth";
 import styles from "./login.module.css";
 
@@ -42,6 +42,10 @@ export default function Login() {
             },
         });
     };
+
+    if (localStorage.getItem("token")) {
+        return <Navigate to="/board" replace />;
+    }
 
     return (
         <div className={styles.page}>
