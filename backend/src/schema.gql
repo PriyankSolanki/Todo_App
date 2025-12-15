@@ -1,0 +1,90 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type CardModel {
+  id: Int!
+  name: String!
+  description: String
+  position: Int!
+}
+
+type BoardColumnModel {
+  id: Int!
+  name: String!
+  position: Int!
+  cards: [CardModel!]!
+}
+
+type BoardModel {
+  id: Int!
+  name: String!
+  columns: [BoardColumnModel!]!
+}
+
+type AuthPayload {
+  userId: Int!
+  token: String!
+}
+
+type Query {
+  boardsByUser(userId: Int!): [BoardModel!]!
+}
+
+type Mutation {
+  updateBoard(input: UpdateBoardInput!): BoardModel!
+  updateColumnName(id: Int!, name: String!): BoardColumnModel!
+  createColumn(input: CreateColumnInput!): BoardColumnModel!
+  deleteColumn(id: Int!): Boolean!
+  updateCard(input: UpdateCardInput!): CardModel!
+  createCard(input: CreateCardInput!): CardModel!
+  deleteCard(id: Int!): Boolean!
+  reorderCards(input: ReorderCardsInput!): Boolean!
+  signup(input: SignupInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+}
+
+input UpdateBoardInput {
+  id: Int!
+  name: String!
+}
+
+input CreateColumnInput {
+  name: String!
+  position: Int!
+  boardId: Int!
+}
+
+input UpdateCardInput {
+  id: Int!
+  name: String
+  description: String
+  columnId: Int
+  position: Int
+}
+
+input CreateCardInput {
+  columnId: Int!
+  name: String!
+  description: String
+}
+
+input ReorderCardsInput {
+  items: [ReorderCardItemInput!]!
+}
+
+input ReorderCardItemInput {
+  id: Int!
+  columnId: Int!
+  position: Int!
+}
+
+input SignupInput {
+  login: String!
+  password: String!
+}
+
+input LoginInput {
+  login: String!
+  password: String!
+}
