@@ -129,14 +129,18 @@
 }
 
 .logoutBtn {
-    margin: 20px;
+    position: fixed;
+    top: 37px;
+    right: 60px;
+    z-index: 9999;
+
     padding: 12px 22px;
     border-radius: 16px;
     border: 1px solid rgba(255,255,255,0.15);
     background: rgba(255, 0, 0, 0.47);
     color: white;
     cursor: pointer;
-    float : right;
+
     font-size: 16px;
     font-weight: 700;
     transition: 0.3s ease;

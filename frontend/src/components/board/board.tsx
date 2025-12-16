@@ -384,6 +384,7 @@ export default function Board() {
         });
 
         if (!dbId) return;
+        await refetch();
     };
 
     const navigate = useNavigate();
